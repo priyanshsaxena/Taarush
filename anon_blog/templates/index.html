@@ -9,23 +9,19 @@
 
             <h2>Top Posts</h2>
             {% if posts %}
-                <ul>
                 {% for post in posts %}
-                    <li>
-                        <div class="post-preview">
-                            <a href="{{ post.get_absolute_url }}">
-                                <h2 class="post-title">
-                                    {{ post.title }}
-                                </h2>
-                            </a>
-                            <p class="post-meta">
-                                Posted on {{ post.posted }}
-                            </p>
-                        </div>
-                        <hr>
-                    </li>
+                    <div class="post-preview">
+                        <a href="{{ post.get_absolute_url }}">
+                            <h2 class="post-title">
+                                {{ post.title }}
+                            </h2>
+                        </a>
+                        <p class="post-meta">
+                            Posted on {{ post.posted }}
+                        </p>
+                    </div>
+                    <hr>
                 {% endfor %}
-                </ul>
             {% else %}
                 <p>There are no posts.</p>
             {% endif %}
@@ -37,15 +33,16 @@
 
             <h2>Categories</h2>
             {% if categories %}
-                <ul>
                 {% for category in categories %}
-                    <li>
-                        <a href="{{ category.get_absolute_url }}">
+                <div class="post-preview">
+                    <a href="{{ category.get_absolute_url }}">
+                        <p class="post-meta">
                             {{ category.title }}
-                        </a>
-                    </li>
+                        </p>
+                    </a>
+                </div>
+                <hr>
                 {% endfor %}
-                </ul>
             {% else %}
                 <p>There are no categories.</p>
             {% endif %}

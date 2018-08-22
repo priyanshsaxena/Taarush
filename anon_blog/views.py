@@ -1,8 +1,9 @@
 from django.shortcuts import render, render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from .models import Blog, Category, User
-from .form import PostForm
-from django.contrib.auth.hashers import make_password
+from .form import PostForm, UserForm, LoginForm
+from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
 
 # Create your views here.
 
@@ -23,13 +24,13 @@ def index(request):
 
 def all_categories(request):
     return render_to_response('all_categories.html', {
-        'posts': Category.objects.all()
+        'categories': Category.objects.all()
     })
 
-def view_post(request):   
-    return render_to_response('view_post.html', {})
-    #     'post': get_object_or_404(Blog, slug=slug)
-    # })
+def view_post(request, slug):   
+    return render_to_response('view_post.html', {
+        'post': get_object_or_404(Blog, slug=slug)
+    })
 
 def view_category(request, slug):
     category = get_object_or_404(Category, slug=slug)
@@ -49,24 +50,44 @@ def post_new(request):
             # post.author = request.user_name
             post.posted = timezone.now()
             post.save()
-            return redirect('post_detail', pk=post.pk)
+            post = Blog.objects.get(pk=post.pk)
+            return redirect('viewpost', slug=post.slug)
     else:
         form = PostForm()
     return render(request, 'new_post.html', {'form': form})
 
 def new_user(request):
     if request.method == "POST":
-        form = PostForm(request.POST)
+        form = UserForm(request.POST)
         if form.is_valid():
             user_name = form.cleaned_data['user_name']
             password = make_password(form.cleaned_data['password'])
             user = User(user_name=user_name, password=password)
             user.save()
-            user = User.objects.get(user_name=user_name)
-            return redirect(user)
+            request.session['logged_in_user'] = user_name
+            request.session.set_expiry(300);
+            return redirect('index')
     else:
-        form = PostForm()
-    return render(request, 'new_post.html', {'form': form})
+        form = UserForm()
+    return render(request, 'new_user.html', {'form': form})
+
+def login(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user_name = form.cleaned_data['user_name']
+            password = form.cleaned_data['password']
+            user = User.objects.get(user_name=user_name)
+            if(user and check_password(password, user.password)):
+                request.session['logged_in_user'] = user_name
+                request.session.set_expiry(300);
+                return redirect('index')
+            else:
+                form.add_error('password', 'Incorrect Password')
+                return render(request, 'login.html', {'form': form})
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
 
 def handler404(request):
     response = render_to_response('404.html', {},

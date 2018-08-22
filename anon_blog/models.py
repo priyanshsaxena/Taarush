@@ -1,12 +1,15 @@
 from django.db import models
 from django.db.models import permalink
-# from django.contrib.auth.models import User
+from django.template.defaultfilters import slugify
 
 # Create your models here.
 
 class User(models.Model):
     user_name = models.CharField(max_length=200, unique=True)
     password = models.CharField(max_length=1000)
+
+    def __str__(self):
+        return self.user_name
 
 class Blog(models.Model):
     title = models.CharField(max_length=100, unique=True)
@@ -21,7 +24,14 @@ class Blog(models.Model):
 
     @permalink
     def get_absolute_url(self):
-        return ('view_blog_post', None, { 'slug': self.slug })
+        return ('viewpost', None, { 'slug': self.slug })
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.title)
+        super(Blog, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
 
 class Category(models.Model):
     title = models.CharField(max_length=100, db_index=True)
@@ -32,4 +42,11 @@ class Category(models.Model):
 
     @permalink
     def get_absolute_url(self):
-        return ('view_blog_category', None, { 'slug': self.slug })
+        return ('viewcategory', None, { 'slug': self.slug })
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.title)
+        super(Category, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
